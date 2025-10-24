@@ -1,0 +1,1 @@
+# pamten-re-azure-infra
