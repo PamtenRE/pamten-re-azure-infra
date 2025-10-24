@@ -26,7 +26,7 @@ Resource names follow strict patterns defined in `docs/naming-conventions.md`:
 
 Every resource must have these tags (defined in environment templates):
 - `Environment`: `dev` or `prod`
-- `Project`: `job-portal`
+- `Project`: `recruit-edge`
 
 ### Manifest-Based Deployment
 
@@ -83,5 +83,3 @@ Parameters in `envs/<env>/parameters.<env>.json` control:
 - `scripts/deploy_from_manifest.py`: Deployment orchestration script
 - `envs/<env>/main.bicep`: Environment entry points
 - `docs/naming-conventions.md`: Resource naming rules
-
-Would you like me to clarify or expand any sections of these instructions?
