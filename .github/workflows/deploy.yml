@@ -1,0 +1,44 @@
+name: Deploy manifest-based infrastructure
+
+on:
+  push:
+    branches:
+      - develop
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set deployment environment
+        id: set-env
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+            echo "ENVIRONMENT=prod" >> "$GITHUB_ENV"
+          else
+            echo "ENVIRONMENT=dev" >> "$GITHUB_ENV"
+          fi
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip3 install pyyaml
+
+      - name: Deploy from manifest
+        env:
+          SQL_ADMIN_USER: ${{ secrets.SQL_ADMIN_USER }}
+          SQL_ADMIN_PWD: ${{ secrets.SQL_ADMIN_PWD }}
+        run: |
+          python3 scripts/deploy_from_manifest.py \
+            --manifest manifest.yml \
+            --env "$ENVIRONMENT"
