@@ -1,0 +1,81 @@
+---
+# Environment-specific resource configurations
+dev:
+  resources:
+    # Storage Account
+    - template: storage
+      variables:
+        name: jobportaldevsa  # Must be globally unique, no hyphens
+        location: eastus
+        resourceGroupName: jobportal-dev-rg
+
+    # SQL Server and Database
+    - template: sql
+      variables:
+        serverName: jobportal-dev-sqlsrv
+        databaseName: jobportal-dev-db
+        location: eastus
+        resourceGroupName: jobportal-dev-rg
+        administratorLogin: ${SQL_ADMIN_USER}
+        administratorPassword: ${SQL_ADMIN_PWD}
+        skuName: Basic
+        edition: Basic
+
+    # App Service
+    - template: app-service
+      variables:
+        name: jobportal-dev-web
+        location: eastus
+        resourceGroupName: jobportal-dev-rg
+        skuName: B1
+        tags:
+          CostCenter: development
+
+    # Azure Functions
+    - template: azure-functions
+      variables:
+        name: jobportal-dev-func
+        location: eastus
+        resourceGroupName: jobportal-dev-rg
+        storageAccountName: jobportaldevsa
+        runtime: java
+
+prod:
+  resources:
+    # Storage Account
+    - template: storage
+      variables:
+        name: jobportalprodsa  # Must be globally unique, no hyphens
+        location: eastus
+        resourceGroupName: jobportal-prod-rg
+
+    # SQL Server and Database
+    - template: sql
+      variables:
+        serverName: jobportal-prod-sqlsrv
+        databaseName: jobportal-prod-db
+        location: eastus
+        resourceGroupName: jobportal-prod-rg
+        administratorLogin: ${SQL_ADMIN_USER}
+        administratorPassword: ${SQL_ADMIN_PWD}
+        skuName: S0
+        edition: Standard
+
+    # App Service
+    - template: app-service
+      variables:
+        name: jobportal-prod-web
+        location: eastus
+        resourceGroupName: jobportal-prod-rg
+        skuName: S1
+        tags:
+          CostCenter: production
+
+    # Azure Functions
+    - template: azure-functions
+      variables:
+        name: jobportal-prod-func
+        location: eastus
+        resourceGroupName: jobportal-prod-rg
+        storageAccountName: jobportalprodsa
+        runtime: java
