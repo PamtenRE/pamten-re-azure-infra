@@ -1,18 +1,10 @@
----
-# Global tags for each environment
-#
-# This file centralizes tag definitions so you don't have to repeat the same
-# key/value pairs for every resource in the manifest.  The deploy script will
-# look up the tags for the chosen environment and merge them with any
-# resource‑specific tags declared in the manifest.  If a resource defines a
-# tag with the same key, it overrides the value in this file.
-
-dev:
-  Environment: dev
-  Project: recruit-edge
-  Owner: teamA
-
-prod:
-  Environment: prod
-  Project: recruit-edge
-  Owner: teamA
+global:
+  applicationId: jobportal
+  environment: ${ENVIRONMENT}
+  costCenter: FIN-2025
+  rsm: vinay.bhavanam@pamten.com
+  managedBy: Pamten CloudOps
+  owner: Cloud Engineering
+  businessUnit: Digital Platforms
+  compliance: SOX
+  confidentiality: Confidential

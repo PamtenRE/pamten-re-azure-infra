@@ -1,107 +1,105 @@
 ---
-# Environment-specific resource configurations
-#
-# GitHub Actions integration:
-# - Set ENVIRONMENT (for example, 'dev' or 'prod') in your workflow environment.
-# - The deploy script will substitute any ${VAR} placeholders with environment variables
-#   and will select the manifest section that matches the target environment.
-#
-# Example (GitHub Actions snippet):
-# env:
-#   ENVIRONMENT: dev
-#
-# Then call the deploy script with the environment value (the script also accepts --env):
-# python scripts/deploy_from_manifest.py --manifest manifest.yaml --env "$ENVIRONMENT"
-#
-# Top-level jobs section (informational):
-jobs:
-  deploy:
-    description: "Deploy resources for the environment selected by the ENVIRONMENT env var set in GitHub Actions."
-    envVar: ENVIRONMENT
-    usage: "Set ENVIRONMENT=dev or ENVIRONMENT=prod in the workflow. The deployment script will use this value to pick the manifest section."
+# Manifest defining Azure infrastructure components for the JobPortal platform.
+# This file is environment-agnostic — all names dynamically expand using ENVIRONMENT.
+# The deploy script substitutes ${ENVIRONMENT} and other env vars at runtime.
 
-# You can use ${VAR} placeholders inside resource variables. The deploy script substitutes them
-# using environment variables (for example ${ENVIRONMENT}, ${SQL_ADMIN_USER}, ${SQL_ADMIN_PWD}).
-# Example dynamic naming (commented):
-#   resourceGroupName: jobportal-${ENVIRONMENT}-rg
-#   name: jobportal-${ENVIRONMENT}-web
+resources:
+  # Storage Account (shared between functions and web apps)
+  - template: storage
+    variables:
+      name: "jobportal${ENVIRONMENT}sa"
+      location: eastus
+      resourceGroupName: "jobportal-${ENVIRONMENT}-rg"
+      tags:
+        application: JobPortal
+        environment: ${ENVIRONMENT}
+        owner: data-platform-team
 
-dev:
-  resources:
-    # Storage Account
-    - template: storage
-      variables:
-        name: jobportaldevsa  # Must be globally unique, no hyphens
-        location: eastus
-        resourceGroupName: jobportal-dev-rg
+  # SQL Server + Database (password handled securely in workflow)
+  - template: sql
+    variables:
+      serverName: "jobportal-${ENVIRONMENT}-sqlsrv"
+      databaseName: "jobportal-${ENVIRONMENT}-db"
+      location: eastus
+      resourceGroupName: "jobportal-${ENVIRONMENT}-rg"
+      skuName: Basic
+      edition: Basic
+      tags:
+        application: JobPortal
+        environment: ${ENVIRONMENT}
 
-    # SQL Server and Database
-    - template: sql
-      variables:
-        serverName: jobportal-dev-sqlsrv
-        databaseName: jobportal-dev-db
-        location: eastus
-        resourceGroupName: jobportal-dev-rg
-        administratorLogin: ${SQL_ADMIN_USER}
-        administratorPassword: ${SQL_ADMIN_PWD}
-        skuName: Basic
-        edition: Basic
+  # Java Web App (App Service)
+  - template: app-service
+    variables:
+      name: "jobportal-${ENVIRONMENT}-java-web"
+      location: eastus
+      resourceGroupName: "jobportal-${ENVIRONMENT}-rg"
+      skuName: B1
+      tags:
+        app: jobportal-java
+        environment: ${ENVIRONMENT}
 
-    # App Service
-    - template: app-service
-      variables:
-        name: jobportal-dev-web
-        location: eastus
-        resourceGroupName: jobportal-dev-rg
-        skuName: B1
-        tags:
-          CostCenter: development
+  # Python Web App (App Service)
+  - template: app-service
+    variables:
+      name: "jobportal-${ENVIRONMENT}-python-web"
+      location: eastus
+      resourceGroupName: "jobportal-${ENVIRONMENT}-rg"
+      skuName: B1
+      tags:
+        app: jobportal-python
+        environment: ${ENVIRONMENT}
 
-    # Azure Functions
-    - template: azure-functions
-      variables:
-        name: jobportal-dev-func
-        location: eastus
-        resourceGroupName: jobportal-dev-rg
-        storageAccountName: jobportaldevsa
-        runtime: java
+  # Function Apps
+  - template: azure-functions
+    variables:
+      name: "jobportal-${ENVIRONMENT}-func-java"
+      location: eastus
+      resourceGroupName: "jobportal-${ENVIRONMENT}-rg"
+      storageAccountName: "jobportal${ENVIRONMENT}sa"
+      runtime: java
+      tags:
+        app: func-java
+        environment: ${ENVIRONMENT}
 
-prod:
-  resources:
-    # Storage Account
-    - template: storage
-      variables:
-        name: jobportalprodsa  # Must be globally unique, no hyphens
-        location: eastus
-        resourceGroupName: jobportal-prod-rg
+  - template: azure-functions
+    variables:
+      name: "jobportal-${ENVIRONMENT}-func-python"
+      location: eastus
+      resourceGroupName: "jobportal-${ENVIRONMENT}-rg"
+      storageAccountName: "jobportal${ENVIRONMENT}sa"
+      runtime: python
+      tags:
+        app: func-python
+        environment: ${ENVIRONMENT}
 
-    # SQL Server and Database
-    - template: sql
-      variables:
-        serverName: jobportal-prod-sqlsrv
-        databaseName: jobportal-prod-db
-        location: eastus
-        resourceGroupName: jobportal-prod-rg
-        administratorLogin: ${SQL_ADMIN_USER}
-        administratorPassword: ${SQL_ADMIN_PWD}
-        skuName: S0
-        edition: Standard
+  # Static website (React Frontend)
+  - template: static-web
+    variables:
+      name: "jobportal${ENVIRONMENT}websa"
+      location: eastus
+      resourceGroupName: "jobportal-${ENVIRONMENT}-rg"
+      tags:
+        app: jobportal-ui
+        environment: ${ENVIRONMENT}
 
-    # App Service
-    - template: app-service
-      variables:
-        name: jobportal-prod-web
-        location: eastus
-        resourceGroupName: jobportal-prod-rg
-        skuName: S1
-        tags:
-          CostCenter: production
+  # API Management Gateway
+  - template: api-management
+    variables:
+      name: "jobportal-${ENVIRONMENT}-api"
+      location: eastus
+      resourceGroupName: "jobportal-${ENVIRONMENT}-rg"
+      skuName: Consumption_0
+      tags:
+        app: jobportal-api
+        environment: ${ENVIRONMENT}
 
-    # Azure Functions
-    - template: azure-functions
-      variables:
-        name: jobportal-prod-func
-        location: eastus
-        resourceGroupName: jobportal-prod-rg
-        storageAccountName: jobportalprodsa
-        runtime: java
+  # Azure AD B2C Tenant (manual provisioning placeholder)
+  - template: azure-ad-b2c
+    variables:
+      tenantName: "jobportal${ENVIRONMENT}b2c"
+      displayName: "JobPortal ${ENVIRONMENT}"
+      countryCode: unitedstates
+      tags:
+        app: identity
+        environment: ${ENVIRONMENT}
