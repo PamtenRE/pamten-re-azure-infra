@@ -1,5 +1,31 @@
 ---
 # Environment-specific resource configurations
+#
+# GitHub Actions integration:
+# - Set ENVIRONMENT (for example, 'dev' or 'prod') in your workflow environment.
+# - The deploy script will substitute any ${VAR} placeholders with environment variables
+#   and will select the manifest section that matches the target environment.
+#
+# Example (GitHub Actions snippet):
+# env:
+#   ENVIRONMENT: dev
+#
+# Then call the deploy script with the environment value (the script also accepts --env):
+# python scripts/deploy_from_manifest.py --manifest manifest.yaml --env "$ENVIRONMENT"
+#
+# Top-level jobs section (informational):
+jobs:
+  deploy:
+    description: "Deploy resources for the environment selected by the ENVIRONMENT env var set in GitHub Actions."
+    envVar: ENVIRONMENT
+    usage: "Set ENVIRONMENT=dev or ENVIRONMENT=prod in the workflow. The deployment script will use this value to pick the manifest section."
+
+# You can use ${VAR} placeholders inside resource variables. The deploy script substitutes them
+# using environment variables (for example ${ENVIRONMENT}, ${SQL_ADMIN_USER}, ${SQL_ADMIN_PWD}).
+# Example dynamic naming (commented):
+#   resourceGroupName: jobportal-${ENVIRONMENT}-rg
+#   name: jobportal-${ENVIRONMENT}-web
+
 dev:
   resources:
     # Storage Account

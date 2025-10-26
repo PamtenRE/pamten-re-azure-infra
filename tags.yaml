@@ -1,3 +1,4 @@
+---
 # Global tags for each environment
 #
 # This file centralizes tag definitions so you don't have to repeat the same
@@ -8,10 +9,10 @@
 
 dev:
   Environment: dev
-  Project: job-portal
-  Owner: platform-team
+  Project: recruit-edge
+  Owner: teamA
 
 prod:
   Environment: prod
-  Project: job-portal
-  Owner: platform-team
+  Project: recruit-edge
+  Owner: teamA
