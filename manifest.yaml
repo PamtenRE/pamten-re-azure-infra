@@ -1,105 +1,141 @@
 ---
-# Manifest defining Azure infrastructure components for the JobPortal platform.
-# This file is environment-agnostic — all names dynamically expand using ENVIRONMENT.
-# The deploy script substitutes ${ENVIRONMENT} and other env vars at runtime.
+# ===================================================================
+#  RecruitEdge Platform - Unified Infrastructure Manifest
+# ===================================================================
+#  Purpose:
+#    - Defines all Azure infrastructure components for RecruitEdge
+#    - Works across all environments (dev, stage, prod)
+#    - Inherits global tags automatically from tags.yaml
+#    - Allows per-resource tag overrides
+#
+#  Deployment Example:
+#    export ENVIRONMENT=dev
+#    python scripts/deploy_from_manifest.py --manifest manifest.yaml --env "$ENVIRONMENT"
+#
+#  Notes:
+#    - Do not store secrets or credentials in this manifest.
+#    - Secrets (SQL creds, SPNs, etc.) are injected via environment secrets.
+# ===================================================================
 
 resources:
-  # Storage Account (shared between functions and web apps)
+
+  # --------------------------------------------------------------
+  # Storage Account - shared between App Services, Functions, Static Web
+  # --------------------------------------------------------------
   - template: storage
     variables:
-      name: "jobportal${ENVIRONMENT}sa"
+      name: "recruitedge${ENVIRONMENT}sa"
       location: eastus
-      resourceGroupName: "jobportal-${ENVIRONMENT}-rg"
+      resourceGroupName: "recruitedge-${ENVIRONMENT}-rg"
       tags:
-        application: JobPortal
-        environment: ${ENVIRONMENT}
-        owner: data-platform-team
+        component: storage
+        purpose: "Shared platform storage"
 
-  # SQL Server + Database (password handled securely in workflow)
+  # --------------------------------------------------------------
+  # SQL Server & Database
+  # --------------------------------------------------------------
   - template: sql
     variables:
-      serverName: "jobportal-${ENVIRONMENT}-sqlsrv"
-      databaseName: "jobportal-${ENVIRONMENT}-db"
+      serverName: "recruitedge-${ENVIRONMENT}-sqlsrv"
+      databaseName: "recruitedge-${ENVIRONMENT}-db"
       location: eastus
-      resourceGroupName: "jobportal-${ENVIRONMENT}-rg"
+      resourceGroupName: "recruitedge-${ENVIRONMENT}-rg"
       skuName: Basic
       edition: Basic
       tags:
-        application: JobPortal
-        environment: ${ENVIRONMENT}
+        component: database
+        tier: backend
 
-  # Java Web App (App Service)
+  # --------------------------------------------------------------
+  # App Services - Java Backend (for ATS logic, APIs)
+  # --------------------------------------------------------------
   - template: app-service
     variables:
-      name: "jobportal-${ENVIRONMENT}-java-web"
+      name: "recruitedge-${ENVIRONMENT}-java-api"
       location: eastus
-      resourceGroupName: "jobportal-${ENVIRONMENT}-rg"
+      resourceGroupName: "recruitedge-${ENVIRONMENT}-rg"
       skuName: B1
       tags:
-        app: jobportal-java
-        environment: ${ENVIRONMENT}
+        app: recruit-edge-api
+        runtime: java
+        tier: backend
 
-  # Python Web App (App Service)
+  # --------------------------------------------------------------
+  # App Services - Python Backend (for ML/Matching Engine)
+  # --------------------------------------------------------------
   - template: app-service
     variables:
-      name: "jobportal-${ENVIRONMENT}-python-web"
+      name: "recruitedge-${ENVIRONMENT}-python-api"
       location: eastus
-      resourceGroupName: "jobportal-${ENVIRONMENT}-rg"
+      resourceGroupName: "recruitedge-${ENVIRONMENT}-rg"
       skuName: B1
       tags:
-        app: jobportal-python
-        environment: ${ENVIRONMENT}
+        app: recruit-edge-ml
+        runtime: python
+        tier: backend
 
-  # Function Apps
+  # --------------------------------------------------------------
+  # Azure Functions - Python (for Resume Parsing, Notifications)
+  # --------------------------------------------------------------
   - template: azure-functions
     variables:
-      name: "jobportal-${ENVIRONMENT}-func-java"
+      name: "recruitedge-${ENVIRONMENT}-func-python"
       location: eastus
-      resourceGroupName: "jobportal-${ENVIRONMENT}-rg"
-      storageAccountName: "jobportal${ENVIRONMENT}sa"
-      runtime: java
-      tags:
-        app: func-java
-        environment: ${ENVIRONMENT}
-
-  - template: azure-functions
-    variables:
-      name: "jobportal-${ENVIRONMENT}-func-python"
-      location: eastus
-      resourceGroupName: "jobportal-${ENVIRONMENT}-rg"
-      storageAccountName: "jobportal${ENVIRONMENT}sa"
+      resourceGroupName: "recruitedge-${ENVIRONMENT}-rg"
+      storageAccountName: "recruitedge${ENVIRONMENT}sa"
       runtime: python
       tags:
-        app: func-python
-        environment: ${ENVIRONMENT}
+        component: resume-parser
+        tier: function
 
-  # Static website (React Frontend)
+  # --------------------------------------------------------------
+  # Azure Functions - Node (for Webhooks or lightweight handlers)
+  # --------------------------------------------------------------
+  - template: azure-functions
+    variables:
+      name: "recruitedge-${ENVIRONMENT}-func-node"
+      location: eastus
+      resourceGroupName: "recruitedge-${ENVIRONMENT}-rg"
+      storageAccountName: "recruitedge${ENVIRONMENT}sa"
+      runtime: node
+      tags:
+        component: webhook-engine
+        tier: function
+
+  # --------------------------------------------------------------
+  # Static Website - React Frontend (RecruitEdge Web Portal)
+  # --------------------------------------------------------------
   - template: static-web
     variables:
-      name: "jobportal${ENVIRONMENT}websa"
+      name: "recruitedge${ENVIRONMENT}websa"
       location: eastus
-      resourceGroupName: "jobportal-${ENVIRONMENT}-rg"
+      resourceGroupName: "recruitedge-${ENVIRONMENT}-rg"
       tags:
-        app: jobportal-ui
-        environment: ${ENVIRONMENT}
+        app: recruit-edge-ui
+        runtime: react
+        tier: frontend
 
-  # API Management Gateway
+  # --------------------------------------------------------------
+  # API Management - Secure gateway for internal/external APIs
+  # --------------------------------------------------------------
   - template: api-management
     variables:
-      name: "jobportal-${ENVIRONMENT}-api"
+      name: "recruitedge-${ENVIRONMENT}-api"
       location: eastus
-      resourceGroupName: "jobportal-${ENVIRONMENT}-rg"
+      resourceGroupName: "recruitedge-${ENVIRONMENT}-rg"
       skuName: Consumption_0
       tags:
-        app: jobportal-api
-        environment: ${ENVIRONMENT}
+        component: apim-gateway
+        tier: middleware
 
-  # Azure AD B2C Tenant (manual provisioning placeholder)
+  # --------------------------------------------------------------
+  # Azure AD B2C - Authentication & Identity (placeholder)
+  # --------------------------------------------------------------
   - template: azure-ad-b2c
     variables:
-      tenantName: "jobportal${ENVIRONMENT}b2c"
-      displayName: "JobPortal ${ENVIRONMENT}"
+      tenantName: "recruitedge${ENVIRONMENT}b2c"
+      displayName: "RecruitEdge ${ENVIRONMENT}"
       countryCode: unitedstates
       tags:
-        app: identity
-        environment: ${ENVIRONMENT}
+        component: identity
+        tier: security

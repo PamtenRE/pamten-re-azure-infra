@@ -1,47 +1,114 @@
-# AI Agent Instructions for pamten-re-azure-infra
+# AI Agent Instructions for RecruitEdge Infrastructure
 
-This repository manages Azure infrastructure for the job-portal project using Bicep templates and a manifest-driven deployment pipeline. The notes below focus on repository-specific conventions an AI agent must follow to be productive immediately.
+This repository manages the Azure infrastructure for the RecruitEdge platform using a manifest-driven approach with Bicep templates. The instructions below cover key conventions and patterns that an AI agent should follow.
 
-## Quick summary
+## Core Concepts
 
-- Environments are under `envs/<env>/` and each has `main.bicep` as the entry point.
-- Canonical environment parameters file: `envs/<env>/parameters.yaml` — a simple YAML mapping of parameter names to values. The deploy script converts this to the Azure parameter JSON shape at runtime.
-- Deployments are driven by `manifest.yaml` and executed by `scripts/deploy_from_manifest.py` which maps short template keys (see `TEMPLATE_PATHS`) to Bicep template files in `templates/`.
+### Manifest-Driven Deployment
+- All resources are defined in `manifest.yaml`
+- Resources are grouped by type (storage, functions, web apps, etc.)
+- Environment-specific values use `${ENVIRONMENT}` substitution
+- Global tags from `tags.yaml` are automatically applied
 
-## Parameters and secrets
+### Template Structure
+- Modular Bicep templates in `templates/` directory
+- Each service type has its own template:
+  - `api-management/` - API Gateway
+  - `app-service/` - Web backends
+  - `azure-functions/` - Serverless components
+  - `sql/` - Database resources
+  - `static-web/` - Frontend hosting
+  - `storage/` - Shared storage
 
-- Use `envs/<env>/parameters.yaml` for environment configuration. Example:
+### Variable Substitution
 
-  ```yaml
-  environment: dev
-  location: eastus
-  administratorLogin: sqladmin
-  administratorPassword: ${SQL_ADMIN_PWD}
-  ```
+The deployment system supports dynamic configuration through environment variables:
 
-- The deploy script substitutes `${VAR}` placeholders with environment variables (CI should provide `SQL_ADMIN_USER` and `SQL_ADMIN_PWD`).
+```yaml
+# Example manifest entry
+- template: sql
+  variables:
+    serverName: "recruitedge-${ENVIRONMENT}-sqlsrv"
+    databaseName: "recruitedge-${ENVIRONMENT}-db"
+    administratorLogin: ${SQL_ADMIN_USER}
+    administratorPassword: ${SQL_ADMIN_PWD}
+```
 
-## Branch/CI behavior
+Required environment variables:
+- `ENVIRONMENT`: Sets deployment target (dev/prod)
+- `SQL_ADMIN_USER`: Database administrator username
+- `SQL_ADMIN_PWD`: Database administrator password
+- Azure credentials (`AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`)
 
-- CI invokes:
-  ```powershell
-  python3 scripts/deploy_from_manifest.py --manifest manifest.yaml --env "$ENVIRONMENT" --branch "${{ github.ref }}"
-  ```
-- If `--branch` is provided the script normalizes the ref by taking the last path segment (e.g. `refs/heads/feature/foo` -> `feature/foo`) and will look for `envs/<branch_short>/parameters.yaml` first. If none exists it falls back to `envs/<env>/parameters.yaml`.
-- Note: we intentionally do not implement implicit mappings (branch -> environment); if you need that mapping, request it explicitly.
+### Tagging System
 
-## Deployment details (practical rules)
+Global tags are defined in `tags.yaml`:
+```yaml
+global:
+  applicationId: jobportal
+  environment: ${ENVIRONMENT}
+  costCenter: FIN-2025
+  rsm: vinay.bhavanam@pamten.com
+  managedBy: Pamten CloudOps
+  # ... other tags
+```
 
-- The script creates a temporary Azure parameters JSON file from the YAML mapping and passes it to the az CLI with `--parameters @file`.
-- Inline parameters constructed from `manifest.yaml` are appended after the file parameters and therefore override values in the file.
-- Tags: env-level tags are loaded from `tags.yaml`; resource-level tags in the manifest override env tags.
+Resource-specific tags can be added in the manifest:
+```yaml
+- template: app-service
+  variables:
+    name: "recruitedge-${ENVIRONMENT}-java-api"
+    tags:
+      app: recruit-edge-api
+      runtime: java
+      tier: backend
+```
 
-## Common tasks
+The deployment script:
+1. Validates required tags exist
+2. Merges global and resource-specific tags
+3. Applies final tag set to each resource
 
-- Add a new template:
-  1. Add `templates/<name>/template.bicep`.
-  2. Add an entry to `TEMPLATE_PATHS` in `scripts/deploy_from_manifest.py`.
-  3. Add a resource entry in `manifest.yaml`.
+### Common Development Tasks
+
+#### Adding New Resources
+
+1. Create Bicep Template:
+   ```bicep
+   // templates/new-service/template.bicep
+   param name string
+   param location string
+   param tags object = {}
+   // ... resource definition
+   ```
+
+2. Add Template Path:
+   ```python
+   # In scripts/deploy_from_manifest.py
+   template_paths = {
+     'new-service': 'templates/new-service/template.bicep',
+     # ... other templates
+   }
+   ```
+
+3. Add to Manifest:
+   ```yaml
+   - template: new-service
+     variables:
+       name: "recruitedge-${ENVIRONMENT}-newservice"
+       location: eastus
+       # ... other parameters
+   ```
+
+#### Updating Environments
+
+1. Modify parameters in `envs/<env>/parameters.yaml`
+2. Update resource configuration in manifest
+3. Test locally before pushing:
+   ```powershell
+   $env:ENVIRONMENT="dev"
+   python scripts/deploy_from_manifest.py --manifest manifest.yaml --env $env:ENVIRONMENT
+   ```
 
 ## Key files
 
