@@ -1,6 +1,6 @@
 environment: "dev"
 location: "eastus"
-resourceGroupName: "recruitedge-dev-rg"
+resourceGroupName: "RGrp-PT_Recruitedge_Dev"
 
 appServiceSkuName: "B1"
 

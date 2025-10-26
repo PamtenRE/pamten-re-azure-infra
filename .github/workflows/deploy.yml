@@ -38,10 +38,12 @@ jobs:
         run: |
           if [[ "${GITHUB_REF_NAME}" == "master" ]]; then
             echo "ENVIRONMENT=prod" >> "$GITHUB_ENV"
+            echo "PARAM_FILE=envs/parameters.prod.yaml" >> $GITHUB_ENV
             echo "RESOURCE_GROUP=recruitedge-prod-rg" >> "$GITHUB_ENV"
           else
             echo "ENVIRONMENT=dev" >> "$GITHUB_ENV"
-            echo "RESOURCE_GROUP=recruitedge-dev-rg" >> "$GITHUB_ENV"
+            echo "PARAM_FILE=envs/parameters.dev.yaml" >> $GITHUB_ENV
+            echo "RESOURCE_GROUP=RGrp-PT_Recruitedge_Dev" >> "$GITHUB_ENV"
           fi
           echo "Using environment: $ENVIRONMENT"
 

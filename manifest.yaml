@@ -8,7 +8,7 @@ resources:
     variables:
       name: "recruitedge${ENVIRONMENT}websa"
       location: eastus
-      resourceGroupName: "recruitedge-${ENVIRONMENT}-rg"
+      resourceGroupName: ${RESOURCE_GROUP}
       enableStaticWebsite: true
       accessTier: Hot
       replicationType: LRS
