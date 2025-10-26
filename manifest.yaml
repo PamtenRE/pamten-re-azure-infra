@@ -1,162 +1,21 @@
 ---
 # ===================================================================
-#  RecruitEdge Platform - Unified Infrastructure Manifest
-# ===================================================================
-#  Purpose:
-#    - Defines all Azure infrastructure components for RecruitEdge
-#    - Works across all environments (dev, stage, prod)
-#    - Inherits global tags automatically from tags.yaml
-#    - Allows per-resource tag overrides
-#
-#  Deployment Example:
-#    export ENVIRONMENT=dev
-#    python scripts/deploy_from_manifest.py --manifest manifest.yaml --env "$ENVIRONMENT"
-#
-#  Notes:
-#    - Do not store secrets or credentials in this manifest.
-#    - Secrets (SQL creds, SPNs, etc.) are injected via environment secrets.
+# RecruitEdge Infrastructure - Storage Account Test Manifest
 # ===================================================================
 
 resources:
-
-  # --------------------------------------------------------------
-  # Shared Storage Account (used by App Services, Functions)
-  # --------------------------------------------------------------
-  # - template: storage
-  #   variables:
-  #     name: "recruitedge${ENVIRONMENT}sa"
-  #     location: eastus
-  #     resourceGroupName: "recruitedge-${ENVIRONMENT}-rg"
-  #     accessTier: Hot
-  #     replicationType: LRS
-  #     enableStaticWebsite: false
-  #     allowBlobPublicAccess: ${ENVIRONMENT} == "dev"
-  #     softDeleteRetentionDays: 7
-  #     tags:
-  #       component: storage
-  #       purpose: "Shared platform storage"
-
-  # --------------------------------------------------------------
-  # SQL Server & Database
-  # --------------------------------------------------------------
-  # - template: sql
-  #   variables:
-  #     serverName: "recruitedge-${ENVIRONMENT}-sqlsrv"
-  #     databaseName: "recruitedge-${ENVIRONMENT}-db"
-  #     location: eastus
-  #     resourceGroupName: "recruitedge-${ENVIRONMENT}-rg"
-  #     skuName: ${ENVIRONMENT} == "prod" ? "S1" : "Basic"
-  #     edition: ${ENVIRONMENT} == "prod" ? "Standard" : "Basic"
-  #     publicNetworkAccess: ${ENVIRONMENT} == "dev"
-  #     administratorLogin: ${SQL_ADMIN_USER}
-  #     administratorPassword: ${SQL_ADMIN_PWD}
-  #     tags:
-  #       component: database
-  #       tier: backend
-
-  # --------------------------------------------------------------
-  # App Service - Java Backend API (ATS logic / business layer)
-  # --------------------------------------------------------------
-  # - template: app-service
-  #   variables:
-  #     name: "recruitedge-${ENVIRONMENT}-java-api"
-  #     location: eastus
-  #     resourceGroupName: "recruitedge-${ENVIRONMENT}-rg"
-  #     skuName: ${ENVIRONMENT} == "prod" ? "P1v2" : "B1"
-  #     runtime: java
-  #     alwaysOn: ${ENVIRONMENT} == "prod"
-  #     tags:
-  #       component: ats-api
-  #       runtime: java
-  #       tier: backend
-
-  # --------------------------------------------------------------
-  # App Service - Python Backend API (ML / Matching Engine)
-  # --------------------------------------------------------------
-  # - template: app-service
-  #   variables:
-  #     name: "recruitedge-${ENVIRONMENT}-python-api"
-  #     location: eastus
-  #     resourceGroupName: "recruitedge-${ENVIRONMENT}-rg"
-  #     skuName: ${ENVIRONMENT} == "prod" ? "P1v2" : "B1"
-  #     runtime: python
-  #     alwaysOn: ${ENVIRONMENT} == "prod"
-  #     tags:
-  #       component: ml-api
-  #       runtime: python
-  #       tier: backend
-
-  # --------------------------------------------------------------
-  # Azure Function - Python (Resume Parsing, Notifications)
-  # --------------------------------------------------------------
-  - template: azure-functions
-    variables:
-      name: "recruitedge-${ENVIRONMENT}-func-python"
-      location: eastus
-      resourceGroupName: "recruitedge-${ENVIRONMENT}-rg"
-      storageAccountName: "recruitedge${ENVIRONMENT}sa"
-      runtime: python
-      skuName: ${ENVIRONMENT} == "prod" ? "EP1" : "Y1"
-      alwaysOn: ${ENVIRONMENT} == "prod"
-      tags:
-        component: resume-parser
-        tier: function
-
-  # --------------------------------------------------------------
-  # Azure Function - Node (Webhook Handlers, Light Event Processing)
-  # --------------------------------------------------------------
-  - template: azure-functions
-    variables:
-      name: "recruitedge-${ENVIRONMENT}-func-node"
-      location: eastus
-      resourceGroupName: "recruitedge-${ENVIRONMENT}-rg"
-      storageAccountName: "recruitedge${ENVIRONMENT}sa"
-      runtime: node
-      skuName: ${ENVIRONMENT} == "prod" ? "EP1" : "Y1"
-      alwaysOn: ${ENVIRONMENT} == "prod"
-      tags:
-        component: webhook-engine
-        tier: function
-
-  # --------------------------------------------------------------
-  # Static Website - React Frontend (RecruitEdge Web Portal)
-  # --------------------------------------------------------------
-  - template: static-web
+  - template: storage
     variables:
       name: "recruitedge${ENVIRONMENT}websa"
       location: eastus
       resourceGroupName: "recruitedge-${ENVIRONMENT}-rg"
       enableStaticWebsite: true
+      accessTier: Hot
+      replicationType: LRS
       allowBlobPublicAccess: true
+      enableHttpsOnly: true
+      softDeleteRetentionDays: 7
       tags:
         component: frontend
-        runtime: react
+        purpose: "React static hosting"
         tier: ui
-
-  # --------------------------------------------------------------
-  # API Management - Gateway for internal/external APIs
-  # --------------------------------------------------------------
-  # - template: api-management
-  #   variables:
-  #     name: "recruitedge-${ENVIRONMENT}-api"
-  #     location: eastus
-  #     resourceGroupName: "recruitedge-${ENVIRONMENT}-rg"
-  #     skuName: ${ENVIRONMENT} == "prod" ? "Developer" : "Consumption_0"
-  #     publisherEmail: "admin@recruitedge.com"
-  #     publisherName: "RecruitEdge Platform"
-  #     tags:
-  #       component: apim-gateway
-  #       tier: middleware
-
-  # --------------------------------------------------------------
-  # Azure AD B2C - Identity & Authentication (Governance Placeholder)
-  # --------------------------------------------------------------
-  # - template: azure-ad-b2c
-  #   variables:
-  #     tenantName: "recruitedge${ENVIRONMENT}b2c"
-  #     displayName: "RecruitEdge ${ENVIRONMENT}"
-  #     countryCode: unitedstates
-  #     domainName: "recruitedge${ENVIRONMENT}.onmicrosoft.com"
-  #     tags:
-  #       component: identity
-  #       tier: security
