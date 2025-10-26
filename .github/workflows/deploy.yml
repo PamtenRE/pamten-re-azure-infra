@@ -16,6 +16,9 @@ jobs:
     name: Deploy Infrastructure
     runs-on: ubuntu-latest
 
+    # Dynamically assign environment to the job
+    environment: ${{ github.ref_name == 'master' && 'prod' || 'dev' }}
+
     env:
       PYTHONUNBUFFERED: 1
       MANIFEST_FILE: manifest.yaml
@@ -31,8 +34,7 @@ jobs:
       # --------------------------------------------------------------
       # 2. Determine Environment (based on branch)
       # --------------------------------------------------------------
-      - name: Set deployment environment
-        id: set-env
+      - name: Set environment variables
         run: |
           if [[ "${GITHUB_REF_NAME}" == "master" ]]; then
             echo "ENVIRONMENT=prod" >> "$GITHUB_ENV"
@@ -44,18 +46,17 @@ jobs:
           echo "Using environment: $ENVIRONMENT"
 
       # --------------------------------------------------------------
-      # 3. Azure Login via OIDC (Service Principal w/ Federated Identity)
+      # 3. Azure Login (reads secrets from job environment automatically)
       # --------------------------------------------------------------
       - name: Azure Login
         uses: azure/login@v2
-        env: ${{ env.ENVIRONMENT }}
         with:
           client-id: ${{ secrets.CLIENT_ID }}
           tenant-id: ${{ secrets.TENANT_ID }}
           subscription-id: ${{ secrets.SUBSCRIPTION_ID }}
 
       # --------------------------------------------------------------
-      # 4. Install Python dependencies
+      # 4. Install Dependencies
       # --------------------------------------------------------------
       - name: Install dependencies
         run: |
@@ -63,15 +64,7 @@ jobs:
           pip3 install pyyaml azure-cli
 
       # --------------------------------------------------------------
-      # 5. Inject Secure Secrets for SQL Admin Credentials
-      # --------------------------------------------------------------
-      # - name: Export environment secrets
-      #   run: |
-      #     echo "SQL_ADMIN_USER=${{ secrets.SQL_ADMIN_USER }}" >> "$GITHUB_ENV"
-      #     echo "SQL_ADMIN_PWD=${{ secrets.SQL_ADMIN_PWD }}" >> "$GITHUB_ENV"
-
-      # --------------------------------------------------------------
-      # 6. Deploy from Manifest
+      # 5. Deploy from Manifest
       # --------------------------------------------------------------
       - name: Deploy from manifest.yaml
         run: |
@@ -81,7 +74,7 @@ jobs:
             --env "$ENVIRONMENT"
 
       # --------------------------------------------------------------
-      # 7. Verify Deployment Summary
+      # 6. Verify Deployment Summary
       # --------------------------------------------------------------
       - name: Post-deployment verification
         run: |
