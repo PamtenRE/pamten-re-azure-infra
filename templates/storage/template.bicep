@@ -56,9 +56,6 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
       enabled: softDeleteRetentionDays > 0
       days: softDeleteRetentionDays
     }
-    blobRestoreStatus: {
-      status: 'disabled'
-    }
   }
   tags: tags
 }
