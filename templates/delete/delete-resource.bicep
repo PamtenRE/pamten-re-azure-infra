@@ -31,23 +31,23 @@ resource deleteDeployment 'Microsoft.Resources/deployments@2022-09-01' = {
       scope: 'inner'
     }
     parameters: {
-      resourceTypeParam: { value: resourceType }
-      apiVersionParam:  { value: apiVersion }
-      resourceNameParam:{ value: resourceName }
+      resourceTypeParam: { value: resourceType },
+      apiVersionParam: { value: apiVersion },
+      resourceNameParam: { value: resourceName }
     }
     template: {
-      '$schema': 'https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#'
-      'contentVersion': '1.0.0.0'
+      '$schema': 'https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#',
+      'contentVersion': '1.0.0.0',
       'parameters': {
-        'resourceTypeParam': { 'type': 'string' }
-        'apiVersionParam':  { 'type': 'string' }
-        'resourceNameParam':{ 'type': 'string' }
-      }
+        'resourceTypeParam': { 'type': 'string' },
+        'apiVersionParam': { 'type': 'string' },
+        'resourceNameParam': { 'type': 'string' }
+      },
       'resources': [
         {
-          'type': '[parameters(''resourceTypeParam'')]'
-          'apiVersion': '[parameters(''apiVersionParam'')]'
-          'name': '[parameters(''resourceNameParam'')]'
+          'type': '[parameters(''resourceTypeParam'')]',
+          'apiVersion': '[parameters(''apiVersionParam'')]',
+          'name': '[parameters(''resourceNameParam'')]',
           'condition': false
         }
       ]
