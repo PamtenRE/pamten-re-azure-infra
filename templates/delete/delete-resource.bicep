@@ -20,7 +20,7 @@ param tags object = {}
 param forceDelete bool = false
 
 // --------------------------------------------------------------------
-// Azure workaround: Use nested deployment to dynamically delete resource
+// Azure workaround: nested deployment to dynamically delete resource
 // --------------------------------------------------------------------
 
 resource deleteDeployment 'Microsoft.Resources/deployments@2022-09-01' = {
@@ -45,9 +45,9 @@ resource deleteDeployment 'Microsoft.Resources/deployments@2022-09-01' = {
       }
       'resources': [
         {
-          'type': "[parameters('resourceTypeParam')]"
-          'apiVersion': "[parameters('apiVersionParam')]"
-          'name': "[parameters('resourceNameParam')]"
+          'type': '[parameters(''resourceTypeParam'')]'
+          'apiVersion': '[parameters(''apiVersionParam'')]'
+          'name': '[parameters(''resourceNameParam'')]'
           'condition': false
         }
       ]
