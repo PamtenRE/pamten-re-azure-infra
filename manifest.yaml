@@ -3,7 +3,7 @@
 # RecruitEdge Infrastructure - Storage Account Test Manifest
 # ===================================================================
 
-resources:
+resourcesToDelete:
   - template: delete-resource
     variables:
       resourceGroupName: ${RESOURCE_GROUP}
@@ -11,11 +11,12 @@ resources:
       resourceType: Microsoft.Storage/storageAccounts
       apiVersion: 2023-05-01
 
+resources:
   - template: storage
     variables:
       name: "recruitedge${ENVIRONMENT}websa"
       location: eastus
-      resourceGroupName: 
+      resourceGroupName:
       enableStaticWebsite: true
       accessTier: Hot
       replicationType: LRS
