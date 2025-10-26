@@ -150,6 +150,7 @@ def main():
         "sql": "templates/sql/template.bicep",
         "api-management": "templates/api-management/template.bicep",
         "azure-ad-b2c": "templates/azure-ad-b2c/template.bicep",
+        "delete-resource": "templates/delete/delete-resource.bicep",
     }
 
     deployed_resources = []

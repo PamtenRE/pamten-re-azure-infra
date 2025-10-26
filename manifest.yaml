@@ -4,11 +4,18 @@
 # ===================================================================
 
 resources:
+  - template: delete-resource
+    variables:
+      resourceGroupName: ${RESOURCE_GROUP}
+      resourceName: recruitedgedevwebsa
+      resourceType: Microsoft.Storage/storageAccounts
+      apiVersion: 2023-05-01
+
   - template: storage
     variables:
       name: "recruitedge${ENVIRONMENT}websa"
       location: eastus
-      resourceGroupName: ${RESOURCE_GROUP}
+      resourceGroupName: 
       enableStaticWebsite: true
       accessTier: Hot
       replicationType: LRS

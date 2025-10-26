@@ -63,15 +63,15 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
 // ----------------------------------------------------------------------------
 // Static Website (optional)
 // ----------------------------------------------------------------------------
-resource staticWebsite 'Microsoft.Storage/storageAccounts/staticWebsite@2023-01-01' = if (enableStaticWebsite) {
-  parent: storageAccount
-  name: 'default'
+resource staticWebsite 'Microsoft.Storage/storageAccounts/staticWebsite@2023-01-01' = if (enableStaticWebsite){
+  name: '${storageAccount.name}/default'
   properties: {
     enabled: true
     indexDocument: 'index.html'
     errorDocument404Path: 'index.html'
   }
 }
+  
 
 // ----------------------------------------------------------------------------
 // Outputs
