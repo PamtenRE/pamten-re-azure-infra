@@ -1,0 +1,59 @@
+environment: "dev"
+location: "eastus"
+resourceGroupName: "recruitedge-dev-rg"
+
+appServiceSkuName: "B1"
+
+sqlSkuName: "Basic"
+sqlEdition: "Basic"
+
+apiManagementSkuName: "Consumption_0"
+
+globalTags:
+  applicationId: recruitedge
+  environment: dev
+  costCenter: FIN-2025
+  managedBy: Pamten CloudOps
+  rsm: vinay.bhavanam@pamten.com
+  businessUnit: Digital Platforms
+  compliance: SOX
+
+# optional per-resource overrides (kept light in dev)
+javaApiTags:
+  component: "ats-api"
+  runtime: "java"
+  tier: "backend"
+
+pythonApiTags:
+  component: "ml-api"
+  runtime: "python"
+  tier: "backend"
+
+pythonFuncTags:
+  component: "resume-parser"
+  tier: "function"
+
+nodeFuncTags:
+  component: "webhook-engine"
+  tier: "function"
+
+webTags:
+  component: "frontend"
+  runtime: "react"
+  tier: "frontend"
+
+apimTags:
+  component: "apim-gateway"
+  tier: "middleware"
+
+sqlTags:
+  component: "platform-db"
+  tier: "data"
+
+storageTags:
+  component: "shared-storage"
+  tier: "core"
+
+b2cTags:
+  component: "identity"
+  tier: "security"

@@ -1,0 +1,67 @@
+environment: "prod"
+location: "eastus"
+resourceGroupName: "recruitedge-prod-rg"
+
+appServiceSkuName: "P1v2"
+
+sqlSkuName: "S1"
+sqlEdition: "Standard"
+
+apiManagementSkuName: "Developer"
+
+globalTags:
+  applicationId: recruitedge
+  environment: prod
+  costCenter: FIN-2025
+  managedBy: Pamten CloudOps
+  rsm: vinay.bhavanam@pamten.com
+  businessUnit: Digital Platforms
+  compliance: SOX
+
+javaApiTags:
+  component: "ats-api"
+  runtime: "java"
+  tier: "backend"
+  criticality: "tier1"
+
+pythonApiTags:
+  component: "ml-api"
+  runtime: "python"
+  tier: "backend"
+  criticality: "tier1"
+
+pythonFuncTags:
+  component: "resume-parser"
+  tier: "function"
+  criticality: "tier1"
+
+nodeFuncTags:
+  component: "webhook-engine"
+  tier: "function"
+  criticality: "tier2"
+
+webTags:
+  component: "frontend"
+  runtime: "react"
+  tier: "frontend"
+  customerFacing: "true"
+
+apimTags:
+  component: "apim-gateway"
+  tier: "middleware"
+  exposure: "external"
+
+sqlTags:
+  component: "platform-db"
+  tier: "data"
+  pii: "yes"
+
+storageTags:
+  component: "shared-storage"
+  tier: "core"
+  retentionPolicy: "default"
+
+b2cTags:
+  component: "identity"
+  tier: "security"
+  authProvider: "azure-ad-b2c"

@@ -1,41 +1,82 @@
-// Azure Functions template
-// This template provisions a Consumption plan and a Function App.  Supply an existing
-// storage account name for the Functions runtime.  The template does not deploy
-// your function code.
-
+@description('Name of the Azure Function App.')
 param name string
+
+@description('Azure region.')
 param location string
+
+@description('Resource group name where the Function App is deployed.')
+param resourceGroupName string
+
+@description('Associated Storage Account name used by this Function App.')
 param storageAccountName string
-@description('Azure Functions runtime (e.g. dotnet, node, python, java).')
-param runtime string = 'java'
-@description('Tags applied to the resources.')
+
+@description('Runtime for this Function App (python, node, java, dotnet).')
+@allowed([
+  'python'
+  'node'
+  'java'
+  'dotnet'
+])
+param runtime string = 'python'
+
+@description('App Service Plan SKU (e.g., Y1 for consumption, EP1 for elastic premium).')
+param skuName string = 'Y1'
+
+@description('Tags to apply to the Function App and its plan.')
 param tags object = {}
 
-// Consumption plan for Functions
-resource plan 'Microsoft.Web/serverfarms@2022-03-01' = {
-  name: '${name}-plan'
+@description('Optional environment variables / app settings.')
+param appSettings object = {}
+
+@description('Always On flag (required for Premium / Dedicated plans).')
+param alwaysOn bool = false
+
+// -----------------------------------------------------------------------------
+// Derived Names
+// -----------------------------------------------------------------------------
+var hostingPlanName = '${name}-plan'
+var storageAccountId = resourceId('Microsoft.Storage/storageAccounts', storageAccountName)
+var linuxFxVersion = runtime == 'python' ? 'Python|3.10' :
+                     runtime == 'node' ? 'Node|18' :
+                     runtime == 'java' ? 'Java|17' :
+                     'DotNet|6.0'
+
+// -----------------------------------------------------------------------------
+// Hosting Plan (Consumption or Premium)
+// -----------------------------------------------------------------------------
+resource functionPlan 'Microsoft.Web/serverfarms@2023-12-01' = if (skuName != 'Y1') {
+  name: hostingPlanName
   location: location
   sku: {
-    name: 'Y1'
-    tier: 'Dynamic'
+    name: skuName
+    tier: skuName == 'EP1' ? 'ElasticPremium' : 'Dynamic'
+  }
+  properties: {
+    reserved: true
   }
   tags: tags
 }
 
+// -----------------------------------------------------------------------------
 // Function App
-resource functionApp 'Microsoft.Web/sites@2022-09-01' = {
+// -----------------------------------------------------------------------------
+resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
   name: name
   location: location
-  kind: 'functionapp'
+  kind: 'functionapp,linux'
+  tags: tags
   properties: {
-    serverFarmId: plan.id
+    serverFarmId: skuName == 'Y1'
+      ? null
+      : functionPlan.id
+    httpsOnly: true
     siteConfig: {
+      linuxFxVersion: linuxFxVersion
+      alwaysOn: alwaysOn
       appSettings: [
         {
           name: 'AzureWebJobsStorage'
-          // The storage account key must be provided; replace the placeholder or
-          // consider using a Key Vault reference.
-          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=<replace-with-key>;EndpointSuffix=core.windows.net'
+          value: concat('DefaultEndpointsProtocol=https;AccountName=', storageAccountName, ';EndpointSuffix=core.windows.net')
         }
         {
           name: 'FUNCTIONS_EXTENSION_VERSION'
@@ -45,10 +86,31 @@ resource functionApp 'Microsoft.Web/sites@2022-09-01' = {
           name: 'FUNCTIONS_WORKER_RUNTIME'
           value: runtime
         }
+        {
+          name: 'WEBSITES_ENABLE_APP_SERVICE_STORAGE'
+          value: 'false'
+        }
+        {
+          name: 'SCM_DO_BUILD_DURING_DEPLOYMENT'
+          value: 'true'
+        }
+        for kvp in appSettings: {
+          name: kvp.key
+          value: kvp.value
+        }
       ]
     }
   }
-  tags: tags
+  dependsOn: [
+    functionPlan
+  ]
 }
 
+// -----------------------------------------------------------------------------
+// Outputs
+// -----------------------------------------------------------------------------
 output functionAppName string = functionApp.name
+output functionAppUrl string = 'https://${functionApp.name}.azurewebsites.net'
+output functionAppId string = functionApp.id
+output functionPlanId string = skuName == 'Y1' ? 'consumption-plan' : functionPlan.id
+output functionPlanName string = skuName == 'Y1' ? 'consumption-plan' : functionPlan.name

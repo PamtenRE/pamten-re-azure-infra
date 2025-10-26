@@ -1,27 +1,51 @@
-name: Deploy manifest-based infrastructure
+name: Deploy RecruitEdge Infrastructure (Manifest-Based)
 
 on:
   push:
     branches:
       - develop
       - master
+      - feature/**
+
+permissions:
+  contents: read
+  id-token: write
 
 jobs:
   deploy:
+    name: Deploy Infrastructure
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
 
+    env:
+      PYTHONUNBUFFERED: 1
+      MANIFEST_FILE: manifest.yaml
+      TAGS_FILE: tags.yaml
+
+    steps:
+      # --------------------------------------------------------------
+      # 1. Checkout Repository
+      # --------------------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # --------------------------------------------------------------
+      # 2. Determine Environment (based on branch)
+      # --------------------------------------------------------------
       - name: Set deployment environment
         id: set-env
         run: |
-          if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+          if [[ "${GITHUB_REF_NAME}" == "master" ]]; then
             echo "ENVIRONMENT=prod" >> "$GITHUB_ENV"
+            echo "RESOURCE_GROUP=recruitedge-prod-rg" >> "$GITHUB_ENV"
           else
             echo "ENVIRONMENT=dev" >> "$GITHUB_ENV"
+            echo "RESOURCE_GROUP=recruitedge-dev-rg" >> "$GITHUB_ENV"
           fi
+          echo "Using environment: $ENVIRONMENT"
 
+      # --------------------------------------------------------------
+      # 3. Azure Login via OIDC (Service Principal w/ Federated Identity)
+      # --------------------------------------------------------------
       - name: Azure Login
         uses: azure/login@v2
         with:
@@ -29,17 +53,37 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      # --------------------------------------------------------------
+      # 4. Install Python dependencies
+      # --------------------------------------------------------------
       - name: Install dependencies
         run: |
           python3 -m pip install --upgrade pip
-          pip3 install pyyaml
+          pip3 install pyyaml azure-cli
 
-      - name: Deploy from manifest
-        env:
-          SQL_ADMIN_USER: ${{ secrets.SQL_ADMIN_USER }}
-          SQL_ADMIN_PWD: ${{ secrets.SQL_ADMIN_PWD }}
+      # --------------------------------------------------------------
+      # 5. Inject Secure Secrets for SQL Admin Credentials
+      # --------------------------------------------------------------
+      # - name: Export environment secrets
+      #   run: |
+      #     echo "SQL_ADMIN_USER=${{ secrets.SQL_ADMIN_USER }}" >> "$GITHUB_ENV"
+      #     echo "SQL_ADMIN_PWD=${{ secrets.SQL_ADMIN_PWD }}" >> "$GITHUB_ENV"
+
+      # --------------------------------------------------------------
+      # 6. Deploy from Manifest
+      # --------------------------------------------------------------
+      - name: Deploy from manifest.yaml
         run: |
+          echo "Starting deployment for environment: $ENVIRONMENT"
           python3 scripts/deploy_from_manifest.py \
-            --manifest manifest.yml \
-            --env "$ENVIRONMENT" \
-            --branch "${{ github.ref }}"
+            --manifest "$MANIFEST_FILE" \
+            --env "$ENVIRONMENT"
+
+      # --------------------------------------------------------------
+      # 7. Verify Deployment Summary
+      # --------------------------------------------------------------
+      - name: Post-deployment verification
+        run: |
+          echo "✅ Deployment complete for RecruitEdge ($ENVIRONMENT)"
+          echo "Resource Group: $RESOURCE_GROUP"
+          az resource list --resource-group "$RESOURCE_GROUP" --output table

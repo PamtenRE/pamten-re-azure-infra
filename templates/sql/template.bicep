@@ -1,43 +1,98 @@
-// Azure SQL server and database template
-
-param location string
+@description('SQL Server name.')
 param serverName string
+
+@description('SQL Database name.')
 param databaseName string
-@description('The administrator username for the SQL server.')
-param administratorLogin string
+
+@description('Azure location.')
+param location string
+
+@description('Resource group name.')
+param resourceGroupName string
+
+@description('SQL Administrator login username.')
+param administratorLogin string = 'sqladmin'
+
+@description('SQL Administrator password (from Key Vault or secret variable).')
 @secure()
-@description('The administrator password for the SQL server.')
 param administratorPassword string
-@description('The name of the pricing tier (e.g. Basic, S0, S1).')
+
+@description('SKU name for SQL Database (e.g., Basic, S0, S1, GP_Gen5_2).')
 param skuName string = 'Basic'
-@description('The edition of the SQL database (e.g. Basic, Standard).')
+
+@description('Edition for SQL Database (Basic, Standard, GeneralPurpose, BusinessCritical).')
 param edition string = 'Basic'
-@description('Tags applied to the resources.')
+
+@description('Enable public network access (true for dev, false for prod).')
+param publicNetworkAccess bool = true
+
+@description('Tags to apply to SQL resources.')
 param tags object = {}
 
-resource sqlServer 'Microsoft.Sql/servers@2022-02-01-preview' = {
+@description('Optional collation for the SQL Database.')
+param collation string = 'SQL_Latin1_General_CP1_CI_AS'
+
+// ----------------------------------------------------------------------------
+// SQL Server
+// ----------------------------------------------------------------------------
+resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
   name: serverName
   location: location
   properties: {
     administratorLogin: administratorLogin
     administratorLoginPassword: administratorPassword
-    version: '12.0'
+    minimalTlsVersion: '1.2'
+    publicNetworkAccess: publicNetworkAccess ? 'Enabled' : 'Disabled'
   }
   tags: tags
 }
 
-resource database 'Microsoft.Sql/servers/databases@2022-02-01-preview' = {
-  name: '${serverName}/${databaseName}'
+// ----------------------------------------------------------------------------
+// SQL Database
+// ----------------------------------------------------------------------------
+resource sqlDatabase 'Microsoft.Sql/servers/databases@2023-05-01-preview' = {
+  name: '${sqlServer.name}/${databaseName}'
   location: location
   sku: {
     name: skuName
     tier: edition
   }
   properties: {
-    collation: 'SQL_Latin1_General_CP1_CI_AS'
+    collation: collation
+    readScale: 'Disabled'
   }
   tags: tags
+  dependsOn: [
+    sqlServer
+  ]
 }
 
-output serverFullyQualifiedDomainName string = '${sqlServer.name}.database.windows.net'
-output databaseNameOut string = database.name
+// ----------------------------------------------------------------------------
+// Firewall rule for dev (optional)
+// ----------------------------------------------------------------------------
+resource allowAzureServices 'Microsoft.Sql/servers/firewallRules@2023-05-01-preview' = if (publicNetworkAccess) {
+  name: '${sqlServer.name}/AllowAzureServices'
+  properties: {
+    startIpAddress: '0.0.0.0'
+    endIpAddress: '0.0.0.0'
+  }
+  dependsOn: [
+    sqlServer
+  ]
+}
+
+// ----------------------------------------------------------------------------
+// Outputs
+// ----------------------------------------------------------------------------
+output sqlServerName string = sqlServer.name
+output sqlDatabaseName string = sqlDatabase.name
+output sqlServerResourceId string = sqlServer.id
+output sqlDatabaseResourceId string = sqlDatabase.id
+output sqlConnectionString string = concat(
+  'Server=tcp:', sqlServer.name, '.database.windows.net,1433;',
+  'Database=', databaseName, ';',
+  'User ID=', administratorLogin, ';',
+  'Password=', administratorPassword, ';',
+  'Encrypt=true;TrustServerCertificate=false;Connection Timeout=30;'
+)
+output serverFullyQualifiedDomainName string = sqlServer.properties.fullyQualifiedDomainName
