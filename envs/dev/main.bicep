@@ -16,7 +16,7 @@ param sqlSku string = 'Basic'
 @description('SQL database tier (e.g. Basic, Standard).')
 param sqlEdition string = 'Basic'
 
-var baseName = 'jobportal-${environment}'
+var baseName = 'recruitedge-${environment}'
 var tags = {
   Environment: environment
   Project: 'job-portal'

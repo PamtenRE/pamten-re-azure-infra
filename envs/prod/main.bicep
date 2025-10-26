@@ -24,7 +24,7 @@ param storageCount int = 1
 @description('Number of Function Apps to create.')
 param functionCount int = 1
 
-var baseName = 'jobportal-${environment}'
+var baseName = 'recruitedge-${environment}'
 var tags = {
   Environment: environment
   Project: 'job-portal'
