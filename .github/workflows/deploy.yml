@@ -41,4 +41,5 @@ jobs:
         run: |
           python3 scripts/deploy_from_manifest.py \
             --manifest manifest.yml \
-            --env "$ENVIRONMENT"
+            --env "$ENVIRONMENT" \
+            --branch "${{ github.ref }}"

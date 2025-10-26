@@ -1,5 +1,58 @@
 # AI Agent Instructions for pamten-re-azure-infra
 
+This repository manages Azure infrastructure for the job-portal project using Bicep templates and a manifest-driven deployment pipeline. The notes below focus on repository-specific conventions an AI agent must follow to be productive immediately.
+
+## Quick summary
+
+- Environments are under `envs/<env>/` and each has `main.bicep` as the entry point.
+- Canonical environment parameters file: `envs/<env>/parameters.yaml` — a simple YAML mapping of parameter names to values. The deploy script converts this to the Azure parameter JSON shape at runtime.
+- Deployments are driven by `manifest.yaml` and executed by `scripts/deploy_from_manifest.py` which maps short template keys (see `TEMPLATE_PATHS`) to Bicep template files in `templates/`.
+
+## Parameters and secrets
+
+- Use `envs/<env>/parameters.yaml` for environment configuration. Example:
+
+  ```yaml
+  environment: dev
+  location: eastus
+  administratorLogin: sqladmin
+  administratorPassword: ${SQL_ADMIN_PWD}
+  ```
+
+- The deploy script substitutes `${VAR}` placeholders with environment variables (CI should provide `SQL_ADMIN_USER` and `SQL_ADMIN_PWD`).
+
+## Branch/CI behavior
+
+- CI invokes:
+  ```powershell
+  python3 scripts/deploy_from_manifest.py --manifest manifest.yaml --env "$ENVIRONMENT" --branch "${{ github.ref }}"
+  ```
+- If `--branch` is provided the script normalizes the ref by taking the last path segment (e.g. `refs/heads/feature/foo` -> `feature/foo`) and will look for `envs/<branch_short>/parameters.yaml` first. If none exists it falls back to `envs/<env>/parameters.yaml`.
+- Note: we intentionally do not implement implicit mappings (branch -> environment); if you need that mapping, request it explicitly.
+
+## Deployment details (practical rules)
+
+- The script creates a temporary Azure parameters JSON file from the YAML mapping and passes it to the az CLI with `--parameters @file`.
+- Inline parameters constructed from `manifest.yaml` are appended after the file parameters and therefore override values in the file.
+- Tags: env-level tags are loaded from `tags.yaml`; resource-level tags in the manifest override env tags.
+
+## Common tasks
+
+- Add a new template:
+  1. Add `templates/<name>/template.bicep`.
+  2. Add an entry to `TEMPLATE_PATHS` in `scripts/deploy_from_manifest.py`.
+  3. Add a resource entry in `manifest.yaml`.
+
+## Key files
+
+- `scripts/deploy_from_manifest.py` — deployment logic and parameter conversion.
+- `manifest.yaml` — top-level manifest used by CI to describe resources per environment.
+- `envs/<env>/parameters.yaml` — canonical per-environment parameters.
+- `docs/naming-conventions.md` — naming and tagging guidance used across templates.
+
+If you want more detail on any workflow or a sample manifest for a new resource, tell me which resource and I will add a focused example.
+# AI Agent Instructions for pamten-re-azure-infra
+
 This repository contains Azure infrastructure as code using Bicep templates for a job portal application. Here's what you need to know to effectively work with this codebase:
 
 ## Architecture Overview

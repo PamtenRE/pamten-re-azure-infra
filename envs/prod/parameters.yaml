@@ -1,0 +1,10 @@
+environment: prod
+location: eastus2
+administratorLogin: sqladmin
+administratorPassword: ChangeMeProd123!
+appServiceSku: S1
+sqlSku: S0
+sqlEdition: Standard
+webCount: 1
+storageCount: 1
+functionCount: 1

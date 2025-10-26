@@ -1,0 +1,10 @@
+environment: dev
+location: eastus
+administratorLogin: sqladmin
+administratorPassword: ChangeMe123!
+appServiceSku: B1
+sqlSku: Basic
+sqlEdition: Basic
+webCount: 1
+storageCount: 1
+functionCount: 1
