@@ -13,7 +13,7 @@ REQUIRED_TAGS = ["applicationId", "environment", "costCenter", "rsm", "managedBy
 # -------------------------------------------------------------------
 def load_yaml(file_path):
     if not os.path.exists(file_path):
-        print(f"❌ YAML file not found: {file_path}")
+        print(f"YAML file not found: {file_path}")
         sys.exit(1)
     with open(file_path, "r") as f:
         return yaml.safe_load(f)
@@ -39,12 +39,12 @@ def merge_tags(resource_vars, global_tags):
 def validate_required_tags(global_tags):
     missing = [t for t in REQUIRED_TAGS if t not in global_tags]
     if missing:
-        print(f"⚠️ Missing required tags: {missing}")
-        print("🚨 Please update tags.yaml before deploying.")
+        print(f"Missing required tags: {missing}")
+        print("Please update tags.yaml before deploying.")
         sys.exit(1)
 
 def ensure_subscription_tags(global_tags):
-    print("🔍 Validating tags at subscription level...")
+    print("Validating tags at subscription level...")
     for key, val in global_tags.items():
         try:
             subprocess.run(
@@ -54,8 +54,8 @@ def ensure_subscription_tags(global_tags):
                 stderr=subprocess.DEVNULL,
             )
         except Exception as e:
-            print(f"⚠️ Skipped creating tag {key}: {e}")
-    print("✅ Subscription-level tag enforcement complete.")
+            print(f"Skipped creating tag {key}: {e}")
+    print("Subscription-level tag enforcement complete.")
 
 # -------------------------------------------------------------------
 # Deployment core
@@ -64,7 +64,7 @@ def deploy_bicep(template_path, variables, dry_run=False):
     """Deploys a Bicep template using az CLI and streams output live."""
     resource_group = variables.get("resourceGroupName")
     if not resource_group:
-        print("❌ Missing resourceGroupName in manifest variables.")
+        print("Missing resourceGroupName in manifest variables.")
         return False
 
     args = [
@@ -77,7 +77,7 @@ def deploy_bicep(template_path, variables, dry_run=False):
 
     if dry_run:
         args.insert(3, "what-if")
-        print("🧪 Running in dry-run mode (what-if)...")
+        print("Running in dry-run mode (what-if)...")
 
     # add parameters
     for key, value in variables.items():
@@ -85,10 +85,10 @@ def deploy_bicep(template_path, variables, dry_run=False):
             continue
         args += ["--parameters", f"{key}={value}"]
 
-    print(f"\n🔧 Deploying: {template_path}")
-    print(f"📦 Resource group: {resource_group}")
-    print(f"➡️  Parameters: {[f'{k}={v}' for k, v in variables.items() if not isinstance(v, (dict, list))]}")
-    print(f"🏗️  Command: {' '.join(args)}")
+    print(f"\nDeploying: {template_path}")
+    print(f"Resource group: {resource_group}")
+    print(f"Parameters: {[f'{k}={v}' for k, v in variables.items() if not isinstance(v, (dict, list))]}")
+    print(f"Command: {' '.join(args)}")
 
     start = time.time()
     process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
@@ -98,17 +98,17 @@ def deploy_bicep(template_path, variables, dry_run=False):
     duration = round(time.time() - start, 2)
 
     if process.returncode == 0:
-        print(f"✅ Deployment succeeded ({duration}s)\n")
+        print(f"Deployment succeeded ({duration}s)\n")
         return True
     else:
-        print(f"❌ Deployment failed ({duration}s)")
+        print(f"Deployment failed ({duration}s)")
         return False
 
 def delete_bicep(template_path, variables):
     """Deletes a resource using a Bicep delete template via az deployment group create."""
     resource_group = variables.get("resourceGroupName")
     if not resource_group:
-        print("❌ Missing resourceGroupName in manifest variables.")
+        print("Missing resourceGroupName in manifest variables.")
         return False
 
     args = [
@@ -124,10 +124,10 @@ def delete_bicep(template_path, variables):
             continue
         args += ["--parameters", f"{key}={value}"]
 
-    print(f"\n🗑️  Deleting via template: {template_path}")
-    print(f"📦 Resource group: {resource_group}")
-    print(f"➡️  Parameters: {[f'{k}={v}' for k, v in variables.items() if not isinstance(v, (dict, list))]}")
-    print(f"🏗️  Command: {' '.join(args)}")
+    print(f"\n Deleting via template: {template_path}")
+    print(f" Resource group: {resource_group}")
+    print(f" Parameters: {[f'{k}={v}' for k, v in variables.items() if not isinstance(v, (dict, list))]}")
+    print(f" Command: {' '.join(args)}")
 
     start = time.time()
     process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
@@ -137,10 +137,10 @@ def delete_bicep(template_path, variables):
     duration = round(time.time() - start, 2)
 
     if process.returncode == 0:
-        print(f"✅ Deletion succeeded ({duration}s)\n")
+        print(f"Deletion succeeded ({duration}s)\n")
         return True
     else:
-        print(f"❌ Deletion failed ({duration}s)")
+        print(f"Deletion failed ({duration}s)")
         return False
 
 # -------------------------------------------------------------------
@@ -155,7 +155,7 @@ def write_audit_log(deployed_resources):
     }
     with open("deployment_report.json", "w") as f:
         json.dump(data, f, indent=2)
-    print("🧾 Deployment report written to deployment_report.json")
+    print("Deployment report written to deployment_report.json")
 
 # -------------------------------------------------------------------
 # Main Orchestration
@@ -181,7 +181,7 @@ def main():
     delete_resources = manifest.get("resourcesToDelete", [])
 
     if not resources:
-        print("❌ No resources found in manifest.")
+        print("No resources found in manifest.")
         sys.exit(1)
 
     template_paths = {
@@ -196,13 +196,13 @@ def main():
 
     deployed_resources = []
     deleted_resources = []
-    print(f"🚀 Starting deployment for environment: {environment}")
-    print(f"🌍 Global tags: {global_tags}")
+    print(f"Starting deployment for environment: {environment}")
+    print(f"Global tags: {global_tags}")
     for resource in delete_resources:
         template_name = resource.get("template")
         template_path = template_paths.get(template_name)
         if not template_path:
-            print(f"⚠️ Unknown template '{template_name}', skipping.")
+            print(f"Unknown template '{template_name}', skipping.")
             continue
 
         raw_vars = resource.get("variables", {})
@@ -219,14 +219,14 @@ def main():
         })
 
         if not success:
-            print("⛔ Stopping deployment due to failure.")
+            print("Stopping deployment due to failure.")
             break
 
     for resource in resources:
         template_name = resource.get("template")
         template_path = template_paths.get(template_name)
         if not template_path:
-            print(f"⚠️ Unknown template '{template_name}', skipping.")
+            print(f" Unknown template '{template_name}', skipping.")
             continue
 
         raw_vars = resource.get("variables", {})
@@ -243,11 +243,11 @@ def main():
         })
 
         if not success:
-            print("⛔ Stopping deployment due to failure.")
+            print("Stopping deployment due to failure.")
             break
 
     write_audit_log(deployed_resources)
-    print("✅ Deployment process completed.\n")
+    print(" Deployment process completed.\n")
 
 if __name__ == "__main__":
     main()
