@@ -27,3 +27,19 @@ resources:
         component: frontend
         purpose: "React static hosting"
         tier: ui
+
+  - template: storage
+    variables:
+      name: "recruitedge2${ENVIRONMENT}websa"
+      location: eastus
+      resourceGroupName:
+      enableStaticWebsite: true
+      accessTier: Hot
+      replicationType: LRS
+      allowBlobPublicAccess: true
+      enableHttpsOnly: true
+      softDeleteRetentionDays: 7
+      tags:
+        component: frontend
+        purpose: "React static hosting"
+        tier: ui
