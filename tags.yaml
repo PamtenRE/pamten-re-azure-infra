@@ -1,10 +1,10 @@
 global:
-  applicationId: jobportal
+  applicationId: recruitEdge
   environment: ${ENVIRONMENT}
   costCenter: FIN-2025
-  rsm: vinay.bhavanam@pamten.com
-  managedBy: Pamten CloudOps
-  owner: Cloud Engineering
-  businessUnit: Digital Platforms
+  rsm: vinaykiranbh@gmail.com
+  managedBy: teamA
+  owner: Vinay Kiran Bhavanam
+  businessUnit: RE
   compliance: SOX
   confidentiality: Confidential
