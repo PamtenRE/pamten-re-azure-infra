@@ -3,6 +3,7 @@
 # RecruitEdge Infrastructure - Storage Account Test Manifest
 # ===================================================================
 
+---
 resourcesToDelete:
   - template: delete-resource
     variables:
@@ -16,7 +17,7 @@ resources:
     variables:
       name: "recruitedge${ENVIRONMENT}websa"
       location: eastus
-      resourceGroupName:
+      resourceGroupName: ${RESOURCE_GROUP}
       enableStaticWebsite: true
       accessTier: Hot
       replicationType: LRS
@@ -32,7 +33,7 @@ resources:
     variables:
       name: "recruitedge2${ENVIRONMENT}websa"
       location: eastus
-      resourceGroupName:
+      resourceGroupName: ${RESOURCE_GROUP}
       enableStaticWebsite: true
       accessTier: Hot
       replicationType: LRS
@@ -43,14 +44,14 @@ resources:
         component: frontend
         purpose: "React static hosting"
         tier: ui
-        
-- template: azure-functions
-  variables:
+
+  - template: azure-functions
+    variables:
       name: "recruitedge${ENVIRONMENT}func"
       location: eastus
       resourceGroupName: ${RESOURCE_GROUP}
       storageAccountName: "recruitedgedevsa"
-      runtime: "python"
+      runtime: "python"         # was "Runtime"
       skuName: "Y1"
       appSettings: "dev"
       alwaysOn: true
