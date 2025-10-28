@@ -43,16 +43,16 @@ resources:
         component: frontend
         purpose: "React static hosting"
         tier: ui
+        
 - template: azure-functions
-    variables:
-      name: "recruitedge-dev-func"
+  variables:
+      name: "recruitedge${ENVIRONMENT}func"
       location: eastus
-      resourceGroupName: "recruitedge-dev-rg"
+      resourceGroupName: ${RESOURCE_GROUP}
       storageAccountName: "recruitedgedevsa"
-      Runtime: "python"
+      runtime: "python"
       skuName: "Y1"
       appSettings: "dev"
       alwaysOn: true
       tags:
         purpose: "web application hosting"
-        
