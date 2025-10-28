@@ -1,9 +1,9 @@
----
+
 # ===================================================================
 # RecruitEdge Infrastructure - Storage Account Test Manifest
 # ===================================================================
 
----
+
 resourcesToDelete:
   - template: delete-resource
     variables:
