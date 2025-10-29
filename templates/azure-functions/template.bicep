@@ -32,25 +32,24 @@ param appSettings object = {}
 param alwaysOn bool = false
 
 // -----------------------------------------------------------------------------
-// Derived Names
+// Derived values
 // -----------------------------------------------------------------------------
 var hostingPlanName = '${name}-plan'
-var storageAccountId = resourceId('Microsoft.Storage/storageAccounts', storageAccountName)
 var linuxFxVersion = runtime == 'python' ? 'Python|3.10' :
                      runtime == 'node' ? 'Node|18' :
                      runtime == 'java' ? 'Java|17' :
                      'DotNet|6.0'
 
-// Convert appSettings object → array of {name, value} pairs
-var appSettingsArray = [
-  for key in union(appSettings, {}): {
+// Convert object → array of key/value pairs (safe for all Bicep versions)
+var appSettingsArray = empty(appSettings) ? [] : [
+  for key in keys(appSettings): {
     name: key
     value: appSettings[key]
   }
 ]
 
 // -----------------------------------------------------------------------------
-// Hosting Plan (Premium/Dedicated only)
+// App Service Plan (only for non-consumption)
 // -----------------------------------------------------------------------------
 resource functionPlan 'Microsoft.Web/serverfarms@2023-12-01' = if (skuName != 'Y1') {
   name: hostingPlanName
@@ -79,31 +78,28 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
     siteConfig: {
       linuxFxVersion: linuxFxVersion
       alwaysOn: alwaysOn
-      appSettings: concat(
-        [
-          {
-            name: 'AzureWebJobsStorage'
-            value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};EndpointSuffix=core.windows.net'
-          }
-          {
-            name: 'FUNCTIONS_EXTENSION_VERSION'
-            value: '~4'
-          }
-          {
-            name: 'FUNCTIONS_WORKER_RUNTIME'
-            value: runtime
-          }
-          {
-            name: 'WEBSITES_ENABLE_APP_SERVICE_STORAGE'
-            value: 'false'
-          }
-          {
-            name: 'SCM_DO_BUILD_DURING_DEPLOYMENT'
-            value: 'true'
-          }
-        ],
-        appSettingsArray
-      )
+      appSettings: concat([
+        {
+          name: 'AzureWebJobsStorage'
+          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};EndpointSuffix=core.windows.net'
+        }
+        {
+          name: 'FUNCTIONS_EXTENSION_VERSION'
+          value: '~4'
+        }
+        {
+          name: 'FUNCTIONS_WORKER_RUNTIME'
+          value: runtime
+        }
+        {
+          name: 'WEBSITES_ENABLE_APP_SERVICE_STORAGE'
+          value: 'false'
+        }
+        {
+          name: 'SCM_DO_BUILD_DURING_DEPLOYMENT'
+          value: 'true'
+        }
+      ], appSettingsArray)
     }
   }
   dependsOn: [
