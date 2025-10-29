@@ -20,7 +20,10 @@ param tags object = {}
 param forceDelete bool = false
 
 // --------------------------------------------------------------------
-// Azure workaround: nested deployment to dynamically delete resource
+// Azure workaround: nested deployment to dynamically "target" a resource
+// (setting condition:false prevents (re)creation and is often used in
+// delete workflows combined with outside "Complete" mode strategies).
+// Here we keep it syntactically valid and compilable.
 // --------------------------------------------------------------------
 
 resource deleteDeployment 'Microsoft.Resources/deployments@2022-09-01' = {
@@ -41,29 +44,25 @@ resource deleteDeployment 'Microsoft.Resources/deployments@2022-09-01' = {
         value: resourceName
       }
     }
-    template: {
-      '$schema': 'https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#'
-      'contentVersion': '1.0.0.0'
-      'parameters': {
-        'resourceTypeParam': {
-          'type': 'string'
-        }
-        'apiVersionParam': {
-          'type': 'string'
-        }
-        'resourceNameParam': {
-          'type': 'string'
-        }
-      }
-      'resources': [
+    template: json('''
+    {
+      "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "resourceTypeParam": { "type": "string" },
+        "apiVersionParam":   { "type": "string" },
+        "resourceNameParam": { "type": "string" }
+      },
+      "resources": [
         {
-          'type': '[parameters(''resourceTypeParam'')]'
-          'apiVersion': '[parameters(''apiVersionParam'')]'
-          'name': '[parameters(''resourceNameParam'')]'
-          'condition': false
+          "type": "[parameters('resourceTypeParam')]",
+          "apiVersion": "[parameters('apiVersionParam')]",
+          "name": "[parameters('resourceNameParam')]",
+          "condition": false
         }
       ]
     }
+    ''')
   }
 }
 
