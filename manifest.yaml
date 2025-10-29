@@ -13,38 +13,6 @@ resourcesToDelete:
       apiVersion: 2023-05-01
 
 resources:
-  - template: storage
-    variables:
-      name: "recruitedge${ENVIRONMENT}websa"
-      location: eastus
-      resourceGroupName: ${RESOURCE_GROUP}
-      enableStaticWebsite: true
-      accessTier: Hot
-      replicationType: LRS
-      allowBlobPublicAccess: true
-      enableHttpsOnly: true
-      softDeleteRetentionDays: 7
-      tags:
-        component: frontend
-        purpose: "React static hosting"
-        tier: ui
-
-  - template: storage
-    variables:
-      name: "recruitedge2${ENVIRONMENT}websa"
-      location: eastus
-      resourceGroupName: ${RESOURCE_GROUP}
-      enableStaticWebsite: true
-      accessTier: Hot
-      replicationType: LRS
-      allowBlobPublicAccess: true
-      enableHttpsOnly: true
-      softDeleteRetentionDays: 7
-      tags:
-        component: frontend
-        purpose: "React static hosting"
-        tier: ui
-
   - template: azure-functions
     variables:
       name: "recruitedge${ENVIRONMENT}func"
