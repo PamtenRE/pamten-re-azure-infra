@@ -80,6 +80,6 @@ jobs:
       # --------------------------------------------------------------
       - name: Post-deployment verification
         run: |
-          echo "✅ Deployment complete for RecruitEdge ($ENVIRONMENT)"
+          echo "Deployment complete for RecruitEdge ($ENVIRONMENT)"
           echo "Resource Group: $RESOURCE_GROUP"
           az resource list --resource-group "$RESOURCE_GROUP" --output table
