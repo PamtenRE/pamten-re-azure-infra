@@ -41,8 +41,16 @@ var linuxFxVersion = runtime == 'python' ? 'Python|3.10' :
                      runtime == 'java' ? 'Java|17' :
                      'DotNet|6.0'
 
+// Convert appSettings object → array of {name, value} pairs
+var appSettingsArray = [
+  for key in union(appSettings, {}): {
+    name: key
+    value: appSettings[key]
+  }
+]
+
 // -----------------------------------------------------------------------------
-// Hosting Plan (only if not Y1 consumption)
+// Hosting Plan (Premium/Dedicated only)
 // -----------------------------------------------------------------------------
 resource functionPlan 'Microsoft.Web/serverfarms@2023-12-01' = if (skuName != 'Y1') {
   name: hostingPlanName
@@ -71,7 +79,7 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
     siteConfig: {
       linuxFxVersion: linuxFxVersion
       alwaysOn: alwaysOn
-      appSettings: [
+      appSettings: union([
         {
           name: 'AzureWebJobsStorage'
           value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};EndpointSuffix=core.windows.net'
@@ -92,12 +100,7 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
           name: 'SCM_DO_BUILD_DURING_DEPLOYMENT'
           value: 'true'
         }
-
-        [for kvp in appSettings: {
-          name: kvp.key
-          value: kvp.value
-        }]
-      ]
+      ], appSettingsArray)
     }
   }
   dependsOn: [
