@@ -31,11 +31,11 @@ param appSettings array = []
 @description('AlwaysOn flag. Required to be true when using Premium or Dedicated plans.')
 param alwaysOn bool = false
 
-@description('Optional resource ID of a user‑assigned managed identity to attach to the Function App. Leave blank to use system‑assigned identity only.')
-param userAssignedIdentityResourceId string = ''
+@description('Optional name of a user‑assigned managed identity in the same resource group to attach to the Function App. Leave blank to use only a system‑assigned identity.')
+param userAssignedIdentityName string = ''
 
-@description('Resource ID of an existing Log Analytics workspace. Application Insights will be created in this template and wired to this workspace.')
-param workspaceResourceId string
+@description('Resource ID of an existing Log Analytics workspace. If left blank, Application Insights will be created without a workspace association (classic mode).')
+param workspaceResourceId string = ''
 
 @description('Optional array of role assignments to apply to the Function App identity. Each entry must contain `roleDefinitionId` and `scope`.')
 param roleAssignments array = []
@@ -56,7 +56,14 @@ var linuxFxVersion = runtime == 'python' ? 'Python|3.10' :
 // Determine the identity configuration. When a user‑assigned identity ID is supplied,
 // the Function App will have both system and user assigned identities. Otherwise,
 // only a system assigned identity is configured.
-var identityConfig = userAssignedIdentityResourceId == ''
+// Compute the resource ID of the user assigned identity if a name is provided.  The
+// identity must exist in the same resource group as the Function App.
+var userAssignedIdentityResourceId = userAssignedIdentityName == '' ? '' : resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', userAssignedIdentityName)
+
+// Determine the identity configuration. When a user‑assigned identity name is supplied,
+// the Function App will have both system and user assigned identities. Otherwise,
+// only a system assigned identity is configured.
+var identityConfig = userAssignedIdentityName == ''
   ? {
       type: 'SystemAssigned'
     }
@@ -164,7 +171,7 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
 // Create RBAC role assignments for the Function App identity
 // Each entry in the roleAssignments parameter should provide a roleDefinitionId and scope
 resource roleAssignmentsRes 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for (role, idx) in roleAssignments: {
-  name: guid(functionApp.id, role.roleDefinitionId, idx)
+  name: guid(functionApp.id, role.roleDefinitionId, string(idx))
   scope: role.scope
   properties: {
     roleDefinitionId: role.roleDefinitionId

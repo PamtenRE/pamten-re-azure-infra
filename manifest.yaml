@@ -16,7 +16,7 @@
 #   - template: storage
 #     variables:
 #       name: "recruitedge${ENVIRONMENT}websa"
-#       location: eastus
+#       location: eastus2
 #       resourceGroupName: ${RESOURCE_GROUP}
 #       enableStaticWebsite: true
 #       accessTier: Hot
@@ -29,6 +29,17 @@
 #         purpose: "React static hosting"
 #         tier: ui
 
+# manifest.yaml
+  - template: user-assigned-identity
+    variables:
+      name: "pamten-re-${ENVIRONMENT}"
+      location: eastus2
+      resourceGroupName: ${RESOURCE_GROUP}
+      tags:
+        component: identity
+        environment: ${ENVIRONMENT}
+
+
   - template: azure-functions
     variables:
       name: "recruitedge2-${ENVIRONMENT}-func"
@@ -36,9 +47,10 @@
       resourceGroupName: ${RESOURCE_GROUP}
       storageAccountName: "recruitedge2${ENVIRONMENT}websa"
       runtime: python
-      skuName: Y1
-      alwaysOn: false
-      userAssignedIdentityName: "mi-recruitedge-${ENVIRONMENT}"
+      skuName: Y1          # Consumption plan
+      alwaysOn: false      # Only for Premium/Dedicated plans
+      userAssignedIdentityName: "pamten-re-${ENVIRONMENT}"  # Leave blank for system-assigned identity
+      workspaceResourceId: ""        # Optionally link Log Analytics workspace
       tags:
         component: backend
         purpose: "RecruitEdge Function API"
