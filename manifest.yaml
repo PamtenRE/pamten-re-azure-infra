@@ -38,6 +38,7 @@
       runtime: python
       skuName: Y1
       alwaysOn: false
+      userAssignedIdentityName: "mi-recruitedge-${ENVIRONMENT}"
       tags:
         component: backend
         purpose: "RecruitEdge Function API"
@@ -50,6 +51,10 @@
           value: "https://recruitedge2${ENVIRONMENT}web.z13.web.core.windows.net"
         - name: "WEBSITE_RUN_FROM_PACKAGE"
           value: "1"
+      roleAssignments:
+        - roleDefinitionId: "/subscriptions/${SUBSCRIPTION_ID}/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe"
+          scope: "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.Storage/storageAccounts/recruitedge2${ENVIRONMENT}websa"
+
 
   - template: app-service
     variables:
