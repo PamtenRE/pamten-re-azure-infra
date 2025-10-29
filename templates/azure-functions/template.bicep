@@ -25,8 +25,8 @@ param skuName string = 'Y1'
 @description('Tags to apply to the Function App and its plan.')
 param tags object = {}
 
-@description('Optional environment variables / app settings.')
-param appSettings array = []    // 👈 changed from object → array for wider compatibility
+@description('Optional environment variables / app settings as an array of {name,value} objects.')
+param appSettings array = []
 
 @description('Always On flag (required for Premium / Dedicated plans).')
 param alwaysOn bool = false
@@ -41,7 +41,7 @@ var linuxFxVersion = runtime == 'python' ? 'Python|3.10' :
                      'DotNet|6.0'
 
 // -----------------------------------------------------------------------------
-// App Service Plan (for non-consumption plans)
+// App Service Plan (only for non-consumption plans)
 // -----------------------------------------------------------------------------
 resource functionPlan 'Microsoft.Web/serverfarms@2023-12-01' = if (skuName != 'Y1') {
   name: hostingPlanName
@@ -73,28 +73,31 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
     siteConfig: {
       linuxFxVersion: linuxFxVersion
       alwaysOn: alwaysOn
-      appSettings: union([
-        {
-          name: 'AzureWebJobsStorage'
-          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};EndpointSuffix=core.windows.net'
-        }
-        {
-          name: 'FUNCTIONS_EXTENSION_VERSION'
-          value: '~4'
-        }
-        {
-          name: 'FUNCTIONS_WORKER_RUNTIME'
-          value: runtime
-        }
-        {
-          name: 'WEBSITES_ENABLE_APP_SERVICE_STORAGE'
-          value: 'false'
-        }
-        {
-          name: 'SCM_DO_BUILD_DURING_DEPLOYMENT'
-          value: 'true'
-        }
-      ], appSettings)
+      appSettings: concat(
+        [
+          {
+            name: 'AzureWebJobsStorage'
+            value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};EndpointSuffix=core.windows.net'
+          }
+          {
+            name: 'FUNCTIONS_EXTENSION_VERSION'
+            value: '~4'
+          }
+          {
+            name: 'FUNCTIONS_WORKER_RUNTIME'
+            value: runtime
+          }
+          {
+            name: 'WEBSITES_ENABLE_APP_SERVICE_STORAGE'
+            value: 'false'
+          }
+          {
+            name: 'SCM_DO_BUILD_DURING_DEPLOYMENT'
+            value: 'true'
+          }
+        ],
+        appSettings
+      )
     }
   }
   dependsOn: [

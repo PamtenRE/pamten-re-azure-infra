@@ -44,12 +44,12 @@
         tier: backend
         environment: ${ENVIRONMENT}
       appSettings:
-        APP_ENV: ${ENVIRONMENT}
-        AZURE_SUBSCRIPTION_ID: ${SUBSCRIPTION_ID}
-        STORAGE_BUCKET_NAME: "recruitedge2${ENVIRONMENT}websa"
-        FRONTEND_URL: "https://recruitedge2${ENVIRONMENT}web.z13.web.core.windows.net"
-        FUNCTIONS_WORKER_RUNTIME: "python"
-        WEBSITE_RUN_FROM_PACKAGE: "1"
+        - name: "APP_ENV"
+          value: "${ENVIRONMENT}"
+        - name: "FRONTEND_URL"
+          value: "https://recruitedge2${ENVIRONMENT}web.z13.web.core.windows.net"
+        - name: "WEBSITE_RUN_FROM_PACKAGE"
+          value: "1"
 
   - template: app-service
     variables:
