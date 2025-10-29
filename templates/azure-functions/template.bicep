@@ -42,7 +42,7 @@ var linuxFxVersion = runtime == 'python' ? 'Python|3.10' :
                      'DotNet|6.0'
 
 // -----------------------------------------------------------------------------
-// Hosting Plan (Consumption or Premium)
+// Hosting Plan (only if not Y1 consumption)
 // -----------------------------------------------------------------------------
 resource functionPlan 'Microsoft.Web/serverfarms@2023-12-01' = if (skuName != 'Y1') {
   name: hostingPlanName
@@ -66,9 +66,7 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
   kind: 'functionapp,linux'
   tags: tags
   properties: {
-    serverFarmId: skuName == 'Y1'
-      ? null
-      : functionPlan.id
+    serverFarmId: skuName == 'Y1' ? null : functionPlan.id
     httpsOnly: true
     siteConfig: {
       linuxFxVersion: linuxFxVersion
@@ -76,7 +74,7 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
       appSettings: [
         {
           name: 'AzureWebJobsStorage'
-          value: concat('DefaultEndpointsProtocol=https;AccountName=', storageAccountName, ';EndpointSuffix=core.windows.net')
+          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};EndpointSuffix=core.windows.net'
         }
         {
           name: 'FUNCTIONS_EXTENSION_VERSION'
@@ -94,10 +92,11 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
           name: 'SCM_DO_BUILD_DURING_DEPLOYMENT'
           value: 'true'
         }
-        for kvp in appSettings: {
+
+        [for kvp in appSettings: {
           name: kvp.key
           value: kvp.value
-        }
+        }]
       ]
     }
   }
