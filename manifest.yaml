@@ -4,30 +4,30 @@
 # ===================================================================
 
 
-resourcesToDelete:
-  - template: delete-resource
-    variables:
-      resourceGroupName: ${RESOURCE_GROUP}
-      resourceName: recruitedgedevwebsa
-      resourceType: Microsoft.Storage/storageAccounts
-      apiVersion: 2023-05-01
+# resourcesToDelete:
+#   - template: delete-resource
+#     variables:
+#       resourceGroupName: ${RESOURCE_GROUP}
+#       resourceName: recruitedgedevwebsa
+#       resourceType: Microsoft.Storage/storageAccounts
+#       apiVersion: 2023-05-01
 
-resources:
-  - template: storage
-    variables:
-      name: "recruitedge${ENVIRONMENT}websa"
-      location: eastus
-      resourceGroupName: ${RESOURCE_GROUP}
-      enableStaticWebsite: true
-      accessTier: Hot
-      replicationType: LRS
-      allowBlobPublicAccess: true
-      enableHttpsOnly: true
-      softDeleteRetentionDays: 7
-      tags:
-        component: frontend
-        purpose: "React static hosting"
-        tier: ui
+  resources:
+#   - template: storage
+#     variables:
+#       name: "recruitedge${ENVIRONMENT}websa"
+#       location: eastus
+#       resourceGroupName: ${RESOURCE_GROUP}
+#       enableStaticWebsite: true
+#       accessTier: Hot
+#       replicationType: LRS
+#       allowBlobPublicAccess: true
+#       enableHttpsOnly: true
+#       softDeleteRetentionDays: 7
+#       tags:
+#         component: frontend
+#         purpose: "React static hosting"
+#         tier: ui
 
   - template: azure-functions
     variables:
