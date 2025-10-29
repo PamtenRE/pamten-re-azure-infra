@@ -63,6 +63,10 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
                       runtime == 'node' ? 'NODE|18-lts' :
                       'DOTNETCORE|6.0'
       alwaysOn: alwaysOn
+      appCommandLine: runtime == 'python' ? 'gunicorn --bind=0.0.0.0 --timeout 600 app:app' :
+                  runtime == 'node' ? 'npm start' :
+                  runtime == 'java' ? '' : ''
+
       appSettings: [
         for kvp in union({
           "APPINSIGHTS_INSTRUMENTATIONKEY": ""

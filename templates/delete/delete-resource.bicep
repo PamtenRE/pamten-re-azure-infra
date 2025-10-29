@@ -41,30 +41,8 @@ resource deleteDeployment 'Microsoft.Resources/deployments@2022-09-01' = {
         value: resourceName
       }
     }
-    template: {
-      '$schema': 'https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#'
-      'contentVersion': '1.0.0.0'
-      'parameters': {
-        'resourceTypeParam': {
-          'type': 'string'
-        }
-        'apiVersionParam': {
-          'type': 'string'
-        }
-        'resourceNameParam': {
-          'type': 'string'
-        }
-      }
-      'resources': [
-        {
-          'type': '[parameters(''resourceTypeParam'')]'
-          'apiVersion': '[parameters(''apiVersionParam'')]'
-          'name': '[parameters(''resourceNameParam'')]'
-          'condition': false
-        }
-      ]
-    }
+    
   }
 }
 
-output message string = '🗑️ Deletion initiated for ${resourceType} → ${resourceName}'
+output message string = 'Deletion initiated for ${resourceType} → ${resourceName}'

@@ -29,31 +29,51 @@ resources:
         purpose: "React static hosting"
         tier: ui
 
-  - template: storage
-    variables:
-      name: "recruitedge2${ENVIRONMENT}websa"
-      location: eastus
-      resourceGroupName: ${RESOURCE_GROUP}
-      enableStaticWebsite: true
-      accessTier: Hot
-      replicationType: LRS
-      allowBlobPublicAccess: true
-      enableHttpsOnly: true
-      softDeleteRetentionDays: 7
-      tags:
-        component: frontend
-        purpose: "React static hosting"
-        tier: ui
-
   - template: azure-functions
     variables:
-      name: "recruitedge${ENVIRONMENT}func"
+      name: "recruitedge2-${ENVIRONMENT}-func"
       location: eastus
       resourceGroupName: ${RESOURCE_GROUP}
-      storageAccountName: "recruitedgedevsa"
-      runtime: "python"         # was "Runtime"
-      skuName: "Y1"
-      appSettings: "dev"
+      storageAccountName: "recruitedge2${ENVIRONMENT}websa"
+      runtime: python
+      skuName: Y1
+      alwaysOn: false
+      tags:
+        component: backend
+        purpose: "RecruitEdge Function API"
+        tier: backend
+        environment: ${ENVIRONMENT}
+      appSettings:
+        APP_ENV: ${ENVIRONMENT}
+        AZURE_SUBSCRIPTION_ID: ${SUBSCRIPTION_ID}
+        STORAGE_BUCKET_NAME: "recruitedge2${ENVIRONMENT}websa"
+        FRONTEND_URL: "https://recruitedge2${ENVIRONMENT}web.z13.web.core.windows.net"
+        FUNCTIONS_WORKER_RUNTIME: "python"
+        WEBSITE_RUN_FROM_PACKAGE: "1"
+
+  - template: app-service
+    variables:
+      name: "recruitedge2-${ENVIRONMENT}-flask"
+      location: eastus
+      resourceGroupName: ${RESOURCE_GROUP}
+      skuName: "B1"
+      runtime: "python"
       alwaysOn: true
       tags:
-        purpose: "web application hosting"
+        component: backend
+        purpose: "RecruitEdge Flask API"
+        tier: backend
+        environment: ${ENVIRONMENT}
+      appSettings:
+        APP_ENV: ${ENVIRONMENT}
+        FLASK_ENV: ${ENVIRONMENT}
+        FLASK_APP: "app.py"
+        SCM_DO_BUILD_DURING_DEPLOYMENT: "true"
+        WEBSITE_RUN_FROM_PACKAGE: "1"
+        PYTHON_VERSION: "3.10"
+        FUNCTIONS_WORKER_RUNTIME: "python"
+        LOG_LEVEL: "INFO"
+        DB_HOST: "recruitedge-${ENVIRONMENT}-db.database.windows.net"
+        DB_NAME: "recruitedge"
+        DB_USER: "adminuser"
+        DB_PASS: "changeme"
