@@ -26,7 +26,7 @@ param skuName string = 'Y1'
 param tags object = {}
 
 @description('Optional environment variables / app settings.')
-param appSettings object = {}
+param appSettings array = []    // 👈 changed from object → array for wider compatibility
 
 @description('Always On flag (required for Premium / Dedicated plans).')
 param alwaysOn bool = false
@@ -40,16 +40,8 @@ var linuxFxVersion = runtime == 'python' ? 'Python|3.10' :
                      runtime == 'java' ? 'Java|17' :
                      'DotNet|6.0'
 
-// Convert object → array of key/value pairs (safe for all Bicep versions)
-var appSettingsArray = empty(appSettings) ? [] : [
-  for key in keys(appSettings): {
-    name: key
-    value: appSettings[key]
-  }
-]
-
 // -----------------------------------------------------------------------------
-// App Service Plan (only for non-consumption)
+// App Service Plan (for non-consumption plans)
 // -----------------------------------------------------------------------------
 resource functionPlan 'Microsoft.Web/serverfarms@2023-12-01' = if (skuName != 'Y1') {
   name: hostingPlanName
@@ -72,13 +64,16 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
   location: location
   kind: 'functionapp,linux'
   tags: tags
+  identity: {
+    type: 'SystemAssigned'
+  }
   properties: {
     serverFarmId: skuName == 'Y1' ? null : functionPlan.id
     httpsOnly: true
     siteConfig: {
       linuxFxVersion: linuxFxVersion
       alwaysOn: alwaysOn
-      appSettings: concat([
+      appSettings: union([
         {
           name: 'AzureWebJobsStorage'
           value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};EndpointSuffix=core.windows.net'
@@ -99,7 +94,7 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
           name: 'SCM_DO_BUILD_DURING_DEPLOYMENT'
           value: 'true'
         }
-      ], appSettingsArray)
+      ], appSettings)
     }
   }
   dependsOn: [
