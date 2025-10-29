@@ -77,3 +77,29 @@ resources:
         DB_NAME: "recruitedge"
         DB_USER: "adminuser"
         DB_PASS: "changeme"
+
+  - template: app-service
+    variables:
+      name: "recruitedge2-${ENVIRONMENT}-java"
+      location: eastus
+      resourceGroupName: ${RESOURCE_GROUP}
+      skuName: "B1"
+      runtime: "java"
+      alwaysOn: true
+      tags:
+        component: backend
+        purpose: "RecruitEdge Java API (Spring Boot / Maven)"
+        tier: backend
+        environment: ${ENVIRONMENT}
+      appSettings:
+        APP_ENV: ${ENVIRONMENT}
+        JAVA_VERSION: "17"
+        MAVEN_OPTS: "-Xmx1024m"
+        SCM_DO_BUILD_DURING_DEPLOYMENT: "true"
+        WEBSITE_RUN_FROM_PACKAGE: "1"
+        WEBSITES_CONTAINER_START_TIME_LIMIT: "1800"
+        LOG_LEVEL: "INFO"
+        DB_HOST: "recruitedge-${ENVIRONMENT}-db.database.windows.net"
+        DB_NAME: "recruitedge"
+        DB_USER: "adminuser"
+        DB_PASS: "changeme"
