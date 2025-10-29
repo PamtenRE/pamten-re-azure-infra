@@ -192,6 +192,7 @@ def main():
         "api-management": "templates/api-management/template.bicep",
         "azure-ad-b2c": "templates/azure-ad-b2c/template.bicep",
         "delete-resource": "templates/delete/delete-resource.bicep",
+        "user-assigned-identity": "templates/user-assigned-identity/template.bicep",
     }
 
     deployed_resources = []
