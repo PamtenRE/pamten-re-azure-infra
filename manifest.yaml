@@ -12,7 +12,7 @@
 #       resourceType: Microsoft.Storage/storageAccounts
 #       apiVersion: 2023-05-01
 
-# resources:
+  resources:
 #   - template: storage
 #     variables:
 #       name: "recruitedge${ENVIRONMENT}websa"
